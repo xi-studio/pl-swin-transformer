@@ -20,7 +20,8 @@ class UNetModel(pl.LightningModule):
     def __init__(self, hparams):
         super(UNetModel, self).__init__()
         self.n_channels = hparams.n_channels
-        self.bilinear = True
+        self.mul_channels = hparams.mul_channels
+        self.batchsize = hparams.batchsize
 
         def double_conv(in_channels, out_channels):
             return nn.Sequential(
@@ -44,39 +45,16 @@ class UNetModel(pl.LightningModule):
                 double_conv(in_channels, out_channels)
             )
 
-        class uplayer(nn.Module):
-            def __init__(self, in_channels, out_channels, bilinear=True):
-                super().__init__()
-
-                if bilinear:
-                    self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-                else:
-                    self.up = nn.ConvTranpose2d(in_channels // 2, in_channels // 2,
-                                                kernel_size=2, stride=2)
-
-                self.conv = double_conv(in_channels, out_channels)
-
-            def forward(self, x1, x2):
-                x1 = self.up(x1)
-                # [?, C, H, W]
-                diffY = x2.size()[2] - x1.size()[2]
-                diffX = x2.size()[3] - x1.size()[3]
-
-                x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                                diffY // 2, diffY - diffY // 2])
-                x = torch.cat([x2, x1], dim=1) ## why 1?
-                return self.conv(x)
-
         self.inc = double_conv(self.n_channels, 64)
         self.down1 = down(64, 128)
         self.down2 = down(128, 256)
         self.down3 = down(256, 512)
         self.down4 = down(512, 512)
+        self.up0 = up(512, 512) 
         self.up1 = up(1024, 256)
         self.up2 = up(512, 128)
         self.up3 = up(256, 64)
-        self.up4 = up(128, 64)
-        self.out = nn.Conv2d(64, 1, kernel_size=1)
+        self.out = nn.Conv2d(128, 1, kernel_size=1)
 
     def forward(self, x):
         x1 = self.inc(x)
@@ -85,14 +63,14 @@ class UNetModel(pl.LightningModule):
         x4 = self.down3(x3)
         x5 = self.down4(x4)
         
-        x = torch.cat([x5,x4], dim=1)
+        x = self.up0(x5)
+        x = torch.cat([x, x4], dim=1)
         x = self.up1(x)
         x = torch.cat([x, x3], dim=1)
         x = self.up2(x)
         x = torch.cat([x, x2], dim=1)
         x = self.up3(x)
         x = torch.cat([x, x1], dim=1)
-        x = self.up4(x)
         return self.out(x)
 
     def training_step(self, batch, batch_nb):
@@ -121,8 +99,8 @@ class UNetModel(pl.LightningModule):
         n_val = int(len(dataset) * 0.1)
         n_train = len(dataset) - n_val
         train_ds, val_ds = random_split(dataset, [n_train, n_val])
-        train_loader = DataLoader(train_ds, batch_size=24, pin_memory=True, shuffle=True, num_workers=4)
-        val_loader = DataLoader(val_ds, batch_size=24, pin_memory=True, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train_ds, batch_size=self.batchsize, pin_memory=True, shuffle=True, num_workers=4)
+        val_loader = DataLoader(val_ds, batch_size=self.batchsize, pin_memory=True, shuffle=False, num_workers=4)
 
         return {
             'train': train_loader,

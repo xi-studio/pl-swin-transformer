@@ -8,7 +8,7 @@ import lightning.pytorch as pl
 from lightning.pytorch.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 
-from unet_base import UNetModel
+from unet import UNetModel
 
 def main(hparams):
     model = UNetModel(hparams)
@@ -20,8 +20,10 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--accelerator", default='gpu')
     parser.add_argument("--devices", default=-1)
-    parser.add_argument("--max_epochs", default=-1)
+    parser.add_argument("--max_epochs", type=int, default=-1)
     parser.add_argument('--n_channels', type=int, default=2)
+    parser.add_argument('--mul_channels', type=int, default=64)
+    parser.add_argument('--batchsize', type=int, default=8)
 
     args = parser.parse_args()
 
