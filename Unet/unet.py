@@ -77,19 +77,15 @@ class UNetModel(pl.LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = F.l1_loss(y_hat, y) 
-        tensorboard_logs = {'train_loss': loss}
-        return {'loss': loss, 'log': tensorboard_logs}
+        self.log('train_loss', loss)
+        return loss
 
     def validation_step(self, batch, batch_nb):
         x, y = batch
         y_hat = self.forward(x)
         loss = F.l1_loss(y_hat, y)
-        return {'val_loss': loss}
-
-    def validation_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': avg_loss}
-        return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
+        self.log('val_loss', loss)
+        return loss
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=0.0005)

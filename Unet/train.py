@@ -12,7 +12,7 @@ from unet import UNetModel
 
 def main(hparams):
     model = UNetModel(hparams)
-    trainer = pl.Trainer(accelerator=hparams.accelerator, devices=hparams.devices, max_epochs=hparams.max_epochs, enable_checkpointing=True)
+    trainer = pl.Trainer(accelerator=hparams.accelerator, devices=hparams.devices, max_epochs=hparams.max_epochs, enable_checkpointing=True, default_root_dir="./logs/")
     
     trainer.fit(model)
 
