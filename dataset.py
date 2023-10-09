@@ -11,6 +11,9 @@ import csv
 import time
 from argparse import ArgumentParser
 import gcsfs
+import io
+
+
 mytransform = transforms.Compose([
         transforms.ToTensor(), # range [0, 255] -> [0.0,1.0]
         ]
@@ -19,8 +22,8 @@ mytransform = transforms.Compose([
 fs = gcsfs.GCSFileSystem(project='colorful-aia')
 fs.ls('era5_jy_test')
 with fs.open('era5_jy_test/radar_rain/Z_RADR_I_Z9010_20190701070601_P_DOR_SA_R_10_230_15.010_clean.png', 'rb') as f:
-    a = f.read()
-    print(a)
+    img = Image.open(io.BytesIO(f.read())
+    print(img)
 
 def preprocess_image(x):
 #    with fs.open('era5_jy_test/radar_rain/Z_RADR_I_Z9010_20190701070601_P_DOR_SA_R_10_230_15.010_clean.png', 'rb') as f:
