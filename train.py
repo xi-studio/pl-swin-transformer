@@ -10,6 +10,7 @@ import argparse
 
 from config import get_config
 from models import build_model
+from plmodel import SwModel
 
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer training and evaluation script', add_help=False)
@@ -61,11 +62,11 @@ def parse_option():
 
 
 def main(config):
-    model = build_model(config)
-    print(model)
+    model = SwModel(config)
+    trainer = pl.Trainer(accelerator='gpu', devices=-1, max_epochs=2, enable_checkpointing=True)
 #    trainer = pl.Trainer(accelerator=hparams.accelerator, devices=hparams.devices, max_epochs=hparams.max_epochs, enable_checkpointing=True, default_root_dir="./logs/")
     
-#    trainer.fit(model)
+    trainer.fit(model)
 
 if __name__ == "__main__":
     args, config = parse_option()

@@ -45,11 +45,14 @@ class Radars(Dataset):
     def __getitem__(self, index):
         img_t0 = preprocess_image(self.list[index][0])
         img_t1 = preprocess_image(self.list[index][1])
-        img_t2 = preprocess_image(self.list[index][2])
 
         img_input = np.concatenate((img_t0, img_t1))
         img_input = img_input.reshape((2, 256, 256))
-        img_output = img_t2
+
+        img = Image.open(self.list[index][2][3:]).convert('L').resize((64, 64))
+        img = np.array(img)
+        img_output = mytransform(img)
+         
 
         return img_input, img_output
 
