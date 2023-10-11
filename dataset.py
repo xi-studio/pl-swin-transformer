@@ -39,8 +39,6 @@ class Radars(Dataset):
         super(Radars, self).__init__()
 
         self.list = np.load('data/2019_rain_list.npy')
-        print(self.list[0])
-
 
     def __getitem__(self, index):
         img_t0 = preprocess_image(self.list[index][0])

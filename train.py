@@ -45,6 +45,11 @@ def parse_option():
     parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
 
+    parser.add_argument('--accelerator', type=str, help='device')
+    parser.add_argument('--devices', type=int, help='devices')
+    parser.add_argument('--max_epochs', type=int, help='max epochs')
+
+
 
     # for acceleration
     parser.add_argument('--fused_window_process', action='store_true',
@@ -61,13 +66,13 @@ def parse_option():
     return args, config
 
 
-def main(config):
+def main(args, config):
     model = SwModel(config)
-    trainer = pl.Trainer(accelerator='gpu', devices=-1, max_epochs=2, enable_checkpointing=True)
-#    trainer = pl.Trainer(accelerator=hparams.accelerator, devices=hparams.devices, max_epochs=hparams.max_epochs, enable_checkpointing=True, default_root_dir="./logs/")
+    #trainer = pl.Trainer(accelerator='gpu', devices=-1, max_epochs=2, enable_checkpointing=True)
+    trainer = pl.Trainer(accelerator=args.accelerator, devices=args.devices, max_epochs=args.max_epochs, enable_checkpointing=True)
     
     trainer.fit(model)
 
 if __name__ == "__main__":
     args, config = parse_option()
-    main(config)
+    main(args, config)

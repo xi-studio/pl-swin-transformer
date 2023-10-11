@@ -22,7 +22,8 @@ from models import build_model
 class SwModel(pl.LightningModule):
     def __init__(self, config):
         super(SwModel, self).__init__()
-        self.batchsize = 8
+        self.batch_size = config.DATA.BATCH_SIZE
+        self.num_workers = config.DATA.NUM_WORKERS
 
         self.l1 = build_model(config)
 
@@ -55,8 +56,8 @@ class SwModel(pl.LightningModule):
         n_val = int(len(dataset) * 0.1)
         n_train = len(dataset) - n_val
         train_ds, val_ds = random_split(dataset, [n_train, n_val])
-        train_loader = DataLoader(train_ds, batch_size=self.batchsize, pin_memory=True, shuffle=True, num_workers=4)
-        val_loader = DataLoader(val_ds, batch_size=self.batchsize, pin_memory=True, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train_ds, batch_size=self.batch_size, pin_memory=True, shuffle=True, num_workers=self.num_workers)
+        val_loader = DataLoader(val_ds, batch_size=self.batch_size, pin_memory=True, shuffle=False, num_workers=self.num_workers)
 
         return {
             'train': train_loader,
