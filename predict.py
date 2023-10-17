@@ -70,24 +70,28 @@ def parse_option():
 
 
 def main(args, config):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     model = SwModel.load_from_checkpoint(checkpoint_path='lightning_logs/version_0/checkpoints/latest.ckpt', config=config)
     model.eval()
     model = model.to(device)
 
     dataset = Radars()
-    n_val = int(len(dataset) * 0.1)
-    n_train = len(dataset) - n_val
-    train_ds, val_ds = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train_ds, batch_size=8, pin_memory=True, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_ds, batch_size=8, pin_memory=True, shuffle=False, num_workers=4)
+    train_loader = DataLoader(dataset, batch_size=1, pin_memory=True, shuffle=False, num_workers=4)
 
-    for (x, y) in val_loader:
+    base = 0 
+    for i, (x, y) in enumerate(train_loader):
         x = x.to(device)
+        y = y.to(device)
         yp = model(x)
-        print(yp.shape)
-        save_image(yp, 'test_s.png')
-        break
+        loss = torch.mean((yp - y)**2)
+        base = base + loss.detach().numpy()
+        print(i)
+        #print(yp.shape)
+        #save_image(yp, 'sample_swin/%d.png' % i)
+        if i > 10000:
+            break
+    print(base / 10000.0)
 
 
 
