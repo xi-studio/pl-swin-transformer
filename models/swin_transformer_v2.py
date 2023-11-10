@@ -580,6 +580,11 @@ class SwinTransformerV2(nn.Module):
                                pretrained_window_size=pretrained_window_sizes[i_layer])
             self.layers.append(layer)
 
+        self.conv = nn.Sequential(
+                nn.Conv2d(1, embed_dim, kernel_size=1, padding=1),
+                nn.Conv2d(embed_dim, 1, kernel_size=1, padding=1),
+                )
+
         self.norm = norm_layer(self.num_features)
         self.avgpool = nn.AdaptiveAvgPool1d(1)
         self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
@@ -614,14 +619,17 @@ class SwinTransformerV2(nn.Module):
         for layer in self.layers:
             x = layer(x)
 
-        x = self.norm(x)  # B L C
-        x = self.avgpool(x.transpose(1, 2))  # B C 1
-        x = torch.flatten(x, 1)
+        #x = self.norm(x)  # B L C
+        (B, L, C) = x.shape
+        x = x.view(B, 1, self.embed_dim * 2, self.embed_dim * 2)
+
+        #x = self.avgpool(x.transpose(1, 2))  # B C 1
+        #x = torch.flatten(x, 1)
         return x
 
     def forward(self, x):
         x = self.forward_features(x)
-        x = self.head(x)
+        #x = self.head(x)
         return x
 
     def flops(self):

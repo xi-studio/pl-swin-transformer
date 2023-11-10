@@ -30,9 +30,6 @@ class SwModel(pl.LightningModule):
     def forward(self, x1, x2, x3):
         x = torch.cat((x1, x2, x3), axis=1)
         x = self.l1(x)
-        B, C= x.shape
-        x = x.view(B, 1, 64, 64)
-        x = F.interpolate(x, scale_factor=4, mode="bicubic")
         
         return x
 
