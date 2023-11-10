@@ -32,6 +32,7 @@ class SwModel(pl.LightningModule):
         x = self.l1(x)
         B, C= x.shape
         x = x.view(B, 1, 64, 64)
+        x = F.interpolate(x, scale_factor=4, mode="bicubic")
         
         return x
 
