@@ -45,6 +45,9 @@ class SwModel(pl.LightningModule):
         y_hat = self.forward(x1, x2, x3)
         loss = F.l1_loss(y_hat, y)
         self.log('val_loss', loss)
+        if batch_nb == 0:
+            name = 'data/sample/img_%05d.png' % self.current_epoch
+            save_image(y_hat.cpu(), name)
         return loss
 
     def configure_optimizers(self):
