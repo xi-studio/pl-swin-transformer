@@ -10,6 +10,7 @@ import torchvision.transforms as transforms
 from torch import optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data.distributed import DistributedSampler
+from torchvision.utils import save_image
 
 import lightning.pytorch as pl
 
@@ -46,7 +47,7 @@ class SwModel(pl.LightningModule):
         loss = F.l1_loss(y_hat, y)
         self.log('val_loss', loss)
         if batch_nb == 0:
-            name = 'data/sample/img_%05d.png' % self.current_epoch
+            name = 'data/tp_sample/img_%05d.png' % self.current_epoch
             save_image(y_hat.cpu(), name)
         return loss
 
