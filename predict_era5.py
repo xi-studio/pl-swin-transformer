@@ -9,11 +9,15 @@ from torchvision.utils import save_image
 import lightning.pytorch as pl
 from lightning.pytorch.loggers import TensorBoardLogger
 import argparse
+import glob
+from PIL import Image
+import numpy as np
 
 from config import get_config
 from models import build_model
 from era5model import SwModel
 from era5_dataset import TP
+
 
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer training and evaluation script', add_help=False)
@@ -67,6 +71,57 @@ def parse_option():
 
     return args, config
 
+mytransform = transforms.Compose([
+        transforms.ToTensor(), # range [0, 255] -> [0.0,1.0]
+        ]
+    )
+
+def preprocess_image(x):
+    tp = Image.open(x).convert('L').resize((256, 256))
+    tp = np.array(tp)
+    tp = mytransform(tp)
+
+    return tp
+
+class TP(Dataset):
+    def __init__(self,transform=None):
+        super(TP, self).__init__()
+
+    def __getitem__(self, index):
+        tp_path = 'data/era5/tp_data/rain_%05d.png' % (index + 6000)
+        tp_t1   = 'data/era5/tp_data/rain_%05d.png' % (index + 1 + 6000)
+        u_path  = 'data/era5/wind_data/wind_u_%05d.png' % (index + 6000)
+        v_path  = 'data/era5/wind_data/wind_v_%05d.png' % (index + 6000)
+
+        tp_img = preprocess_image(tp_path)
+        u_img  = preprocess_image(u_path)
+        v_img  = preprocess_image(v_path)
+        t1_img = preprocess_image(tp_t1)
+
+        return tp_img, u_img, v_img, t1_img 
+
+    def __len__(self):
+        return 2000
+
+def predict_24(index):
+    
+    tp_path = 'data/era5/tp_data/rain_%05d.png' % (index + 6000)
+    tp_t1   = 'data/era5/tp_data/rain_%05d.png' % (index + 1 + 6000)
+    u_path  = 'data/era5/wind_data/wind_u_%05d.png' % (index + 6000)
+    v_path  = 'data/era5/wind_data/wind_v_%05d.png' % (index + 6000)
+
+    tp_img = preprocess_image(tp_path)
+    u_img  = preprocess_image(u_path)
+    v_img  = preprocess_image(v_path)
+    t1_img = preprocess_image(tp_t1)
+
+    tp_img = tp_img.unsqueeze(0)
+    u_img  = u_img.unsqueeze(0)
+    v_img  = v_img.unsqueeze(0)
+    t1_img = t1_img.unsqueeze(0)
+
+    return tp_img, u_img, v_img, t1_img
+
 
 def main(args, config):
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -79,24 +134,44 @@ def main(args, config):
     dataset = TP()
     train_loader = DataLoader(dataset, batch_size=1, pin_memory=True, shuffle=False, num_workers=4)
 
-    base = 0 
-    for i, (x1, x2, x3, y) in enumerate(train_loader):
+#    base = 0 
+#    for i, (x1, x2, x3, y) in enumerate(train_loader):
+#        x1 = x1.to(device)
+#        x2 = x2.to(device)
+#        x3 = x3.to(device)
+#        y = y.to(device)
+#        yp = model(x1, x2, x3)
+#        loss = torch.mean((yp - y)**2)
+#        base = base + loss.detach().numpy()
+#        print(i)
+#        cy = torch.cat((y, yp), axis=0)
+#        save_image(cy, 'data/predict_sample/tp_vs/%d.png' % i)
+#        if i > 100:
+#            break
+#    print(base / 2000.0)
+    
+    index = 10
+    loss_list = []
+    img_list = []
+    for i in range(240):
+        x1, x2, x3, y = predict_24(i) 
         x1 = x1.to(device)
         x2 = x2.to(device)
         x3 = x3.to(device)
-        y = y.to(device)
-        yp = model(x1, x2, x3)
-        print(yp.shape)
+        y  = y.to(device)
+        if i == 0:
+            yp = model(x1, x2, x3)
+        else:
+            yp = model(yp, x2, x3)
         loss = torch.mean((yp - y)**2)
-        #base = base + loss.detach().numpy()
-        print(loss)
-        print(i)
-        #print(yp.shape)
-        save_image(yp, 'data/predict_sample/tp/%d.png' % i)
-        if i > 10:
-            break
-    #print(base / 10000.0)
-    #print(base)
+        loss_list.append(loss.detach().numpy())
+        print(i, ":", loss)
+        #cy = torch.cat((y, yp),axis=0)
+        save_image(yp, 'data/predict_sample/tp_4_xr/%d_%03d.png' % (index+6000, i))
+
+
+    #print(np.array(loss_list))
+    #np.save('data/predict_sample/6010_240_loss.npy', np.array(loss_list))
 
 
 if __name__ == "__main__":
