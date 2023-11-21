@@ -46,7 +46,7 @@ class TP(Dataset):
         t1_img = preprocess_image(tp_t1)
         t2_img = preprocess_image(tp_t2)
 
-        return tp_img, t1_img, t2_img, u_img, v_img
+        return tp_img, t1_img, u_img, v_img, t2_img
 
     def __len__(self):
         return 6000

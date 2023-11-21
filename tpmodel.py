@@ -14,7 +14,7 @@ from torchvision.utils import save_image
 
 import lightning.pytorch as pl
 
-from era5_dataset import TP
+from tp_dataset import TP
 
 from config import get_config
 from models import build_model
@@ -28,22 +28,22 @@ class SwModel(pl.LightningModule):
 
         self.l1 = build_model(config)
 
-    def forward(self, x1, x2, x3):
-        x = torch.cat((x1, x2, x3), axis=1)
+    def forward(self, x1, x2, x3, x4):
+        x = torch.cat((x1, x2, x3, x4), axis=1)
         x = self.l1(x)
         
         return x
 
     def training_step(self, batch, batch_nb):
-        x1, x2, x3, y = batch
-        y_hat = self.forward(x1, x2, x3)
+        x1, x2, x3, x4, y = batch
+        y_hat = self.forward(x1, x2, x3, x4)
         loss = F.l1_loss(y_hat, y) 
         self.log('train_loss', loss)
         return loss
 
     def validation_step(self, batch, batch_nb):
-        x1, x2, x3, y = batch
-        y_hat = self.forward(x1, x2, x3)
+        x1, x2, x3, x4, y = batch
+        y_hat = self.forward(x1, x2, x3, x4)
         loss = F.l1_loss(y_hat, y)
         self.log('val_loss', loss)
         if batch_nb == 0:
