@@ -10,7 +10,7 @@ import argparse
 
 from config import get_config
 from models import build_model
-from tpmodel import SwModel
+from tp_model import SwModel
 
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer training and evaluation script', add_help=False)

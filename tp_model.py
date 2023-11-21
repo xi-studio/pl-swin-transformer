@@ -47,7 +47,7 @@ class SwModel(pl.LightningModule):
         loss = F.l1_loss(y_hat, y)
         self.log('val_loss', loss)
         if batch_nb == 0:
-            name = 'data/tp_sample/img_%05d.png' % self.current_epoch
+            name = 'data/predict_sample/tp_sample/img_%05d.png' % self.current_epoch
             save_image(y_hat.cpu(), name)
         return loss
 
