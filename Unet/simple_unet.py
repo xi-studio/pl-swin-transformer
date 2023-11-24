@@ -99,7 +99,7 @@ class UNetModel(nn.Module):
 
 def training_function():
     epoch_num = 4
-    batch_size = 64
+    batch_size = 16
     learning_rate = 0.005
 
     #train_tfm = Compose([RandomResizedCrop(image_size, scale=(0.5, 1.0)), ToTensor()])
@@ -109,8 +109,8 @@ def training_function():
     n_val = int(len(dataset) * 0.1)
     n_train = len(dataset) - n_val
     train_ds, val_ds = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=8)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=8)
 
 
     model = UNetModel()
@@ -122,15 +122,15 @@ def training_function():
 
     for epoch in range(epoch_num):
         model.train()
-        for i, (X_train, y_train) in enumerate(train_loader):
-            out = model(X_train)
+        for i, (x_train, y_train) in enumerate(train_loader):
+            out = model(x_train)
             loss = criterion(out, x_train)
 
             optimizer.zero_grad()
             accelerator.backward(loss)
             optimizer.step()
 
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 10 == 0:
                 print(f"{accelerator.device} Train... [epoch {epoch + 1}/{epoch_num}, step {i + 1}/{len(train_loader)}]\t[loss {loss.item()}]")
         
 
