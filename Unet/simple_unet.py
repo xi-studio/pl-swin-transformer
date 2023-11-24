@@ -130,8 +130,9 @@ def training_function():
             accelerator.backward(loss)
             optimizer.step()
 
-            if (i + 1) % 100 == 0:
-                print(f"{accelerator.device} Train... [epoch {epoch + 1}/{epoch_num}, step {i + 1}/{len(train_loader)}]\t[loss {loss.item()}]")
+            #if (i + 1) % 100 == 0:
+            #    print(f"{accelerator.device} Train... [epoch {epoch + 1}/{epoch_num}, step {i + 1}/{len(train_loader)}]\t[loss {loss.item()}]")
+            print(f"{accelerator.device} Train... [epoch {epoch + 1}/{epoch_num}, step {i + 1}/{len(train_loader)}]\t[loss {loss.item()}]")
         
 
 def main(): 
