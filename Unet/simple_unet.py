@@ -1,10 +1,16 @@
 import torch
+import argparse
+import os
+import re
+
+import numpy as np
+import PIL
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.transforms import ToTensor, Compose
 import torchvision.datasets as datasets
 from accelerate import Accelerator
-from accelerate import notebook_launcher
+from torchvision.transforms import Compose, RandomResizedCrop, Resize, ToTensor
 
 class Radars(Dataset):
     def __init__(self, file_names, transform=None):
@@ -96,11 +102,16 @@ def training_function():
     batch_size = 64
     learning_rate = 0.005
 
-    train_data = Radar()
-    test_data = Radar()
+    #train_tfm = Compose([RandomResizedCrop(image_size, scale=(0.5, 1.0)), ToTensor()])
+    train_tfm = Compose([ToTensor()])
+    filenames = np.arange(1000)
+    dataset = Radars(filenames, transform=train_tfm) 
+    n_val = int(len(dataset) * 0.1)
+    n_train = len(dataset) - n_val
+    train_ds, val_ds = random_split(dataset, [n_train, n_val])
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=4)
 
-    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
     model = UNetModel()
     criterion = nn.L1Loss()
