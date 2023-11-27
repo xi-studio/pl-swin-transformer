@@ -29,7 +29,7 @@ class SwModel(pl.LightningModule):
         self.l1 = build_model(config)
 
     def forward(self, x1, x2, x3):
-        x = torch.cat((x1, x2, x3), axis=1)
+        x = torch.cat((x2, x3), axis=1)
         x = self.l1(x)
         
         return x
@@ -47,7 +47,7 @@ class SwModel(pl.LightningModule):
         loss = F.l1_loss(y_hat, y)
         self.log('val_loss', loss)
         if batch_nb == 0:
-            name = 'data/tp_sample/img_%05d.png' % self.current_epoch
+            name = 'data/predict_sample/tp_uv_sample/img_%05d.png' % self.current_epoch
             save_image(y_hat.cpu(), name)
         return loss
 
